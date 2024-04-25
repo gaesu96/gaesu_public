@@ -1,0 +1,46 @@
+# mmdetection install
+
+import torch
+
+# 실습환경이 mmdetection 2.x 기준으로, pytorch 1.13.0으로 setting(mmdetection 2.x는 pytorch 2.0대를 지원하지 않음)
+!pip install torch==1.13.0+cu116 torchvision==0.14.0+cu116 --extra-index-url https://download.pytorch.org/whl/cu116
+# mmcv를 위해서 mmcv-full을 먼저 설치
+!pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu116/torch1.13/index.html
+# mmdetection은 3.0 version이 출시되었으나, 실습 환경 상 2.x대로 설치
+!git clone --branch 2.x https://github.com/open-mmlab/mmdetection.git
+!cd mmdetection; python setup.py install
+
+# 위까지 설치 후 커널 재시작
+
+# init_detector : config file과 pre-train된 모델을 기반으로 detector 모델 생성
+# inference_detector : model을 기반으로 object detection 수행
+
+from mmdet.apis import init_detector, inference_detector
+
+# mmdetection 기반 get_detected_img 함수 생성
+
+import numpy as np
+
+def get_detected_img(model, img, score_threshold):
+  draw_img = img.copy()
+  bbox_color = (0, 255, 0)
+  text_color = (0, 0, 255)
+
+  result = inference_detector(model, img)
+
+  for result_idx, result in enumerate(result):
+    if len(result) == 0:
+      continue
+
+    result_filter = result[np.where(result[:, 4] > score_threshold)]
+
+    for i in range(len(result_filter)):
+      left = int(result_filter[i, 0])
+      top = int(result_filter[i, 1])
+      right = int(result_filter[i, 2])
+      bottom = int(result_filter[i, 3])
+      caption = f'{labels_to_names_seq[result_idx]}: {result_filter[i, 4]}'
+      cv2.rectangle(draw_img, (left, top), (right, bottom), bbox_color, thickness=2)
+      cv2.putText(draw_img, caption, (left, top-5), cv2.FONT_HERSHEY_SIMPLEX, 0.37, text_color, 1)
+
+  return draw_img
