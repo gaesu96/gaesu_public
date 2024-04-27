@@ -1,0 +1,17 @@
+import subprocess
+import xml.dom.minidom
+
+# 셸 명령어 실행
+output = subprocess.check_output(["cat", "/content/data/annotations/xmls/Abyssinian_1.xml"])
+
+# 바이너리로 반환된 결과를 문자열로 변환하여 저장
+xml_content = output.decode("utf-8")
+
+# XML 파싱
+dom = xml.dom.minidom.parseString(xml_content)
+
+# 보기 좋은 형식의 XML 문자열로 변환
+pretty_xml_content = dom.toprettyxml()
+
+# 결과 확인
+print(pretty_xml_content)
